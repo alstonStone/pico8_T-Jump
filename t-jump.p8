@@ -4,6 +4,7 @@ __lua__
 --main--
 
 function _init()
+	debug=false
 	gravity=5
 	--p_init()
 	plr_init()
@@ -94,7 +95,7 @@ end
 
 function bm_init()
 	blocks={}
-	add(blocks, spawn_block(rnd(120),0))
+	add(blocks, spawn_block(flr(rnd(15))*8,0))
 end
 
 
@@ -136,6 +137,11 @@ function plr_init()
 	plr={}
 	plr.x=63
 	plr.y=63
+	plr.dx=0
+	plr.dy=0
+	plr.w=8
+	plr.h=8
+	
 	plr.is_gnd=false
 	plr.speed=3
 	plr.jump=0
@@ -145,15 +151,16 @@ end
 
 
 function plr_update()
-	plr.is_gnd=is_grounded()
-	
+	plr.is_gnd=collide()
+	apply_gravity()
 	move_plr()
-	--apply_gravity()
+	
 end
 
 
 function plr_draw()
 	spr(1,plr.x,plr.y)
+	print(plr.is_gnd)
 end
 
 
@@ -163,7 +170,7 @@ function move_plr()
 	if (collide()) plr.x=lx
 	ly=plr.y
 	move_ud()
-	if (collide()) plr.y=ly
+	if (plr.is_gnd) plr.y=ly
 end
 
 
@@ -199,19 +206,58 @@ function collide()
 end
 
 
-function is_grounded()
-	local bl={x=plr.x,y=plr.y+7}--bottom left--
-	local br={x=plr.x+7,y=plr.y+7}--bottom right--
+
 	
-	local blc=fget(mget(bl.x,bl.y),0)--bl collision--
-	local brc=fget(mget(br.x,br.y),0)--br collision--
-	
-	return blc or brc
+function solid_at(pixel_x,pixel_y)
+	local tile_x=flr(pixel_x/8)
+	local tile_y=flr(pixel_y/8)
+	return fget(mget(tile_x,tile_y),0)
+end
+
+
+function check_collision(x,y,w,h)
+	return solid_at(x    ,y)
+		or    solid_at(x+w-1,y)
+		or    solid_at(x    ,y+h-1)
+		or    solid_at(x+w-1,y+h-1)
 end
 	
+
+function move_player()
+	--horizontal--
+	plr.x+=plr.dx
+	if check_collision(plr.x,plr.y,plr.w,plr.h) then
+		if plr.dx>0 then
+			--hit a wall on the right side--
+			local tile_x=flr((plr.x+plr.w-1)/8)
+			plr.x = (tile_x*8)-plr.w
+		elseif plr.dx<0 then
+			--hit a wall on the left--
+			local tile_x=flr(plr.x/8)
+			plr.x=tile_x*8+8
+		end
+		plr.dx=0
+	end
 	
+	--vertical--
+	plr.is_gnd=false
+	plr.y+=dy
 	
-	
+	if check_collision(plr.x,plr.y,plr.w,plr.h) then
+		if ply.dy>0 then
+			--landed--
+			local tile_y=flr((plr.y-plr.h-1)/8)
+			plr.y=(tile_y*8)+plr.h
+			plr.is_gnd=true
+		elseif plr.dy<0 then
+			--hit head--
+			local tile_y=flr((plr.y+plr.h)/8)
+			plr.y=tile_y*8+8
+		end
+		plr.dy=0
+	end
+end
+
 	
 __gfx__
 00000000777777770000000066666666999999990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
