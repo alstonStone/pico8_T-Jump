@@ -27,70 +27,6 @@ function _draw()
 	bm_draw()
 end
 -->8
---player--
-
-function p_init()
-	px=63
-	py=63
-	is_grounded=false
-	gravity=5
-	p_speed=3
-	jump=0
-	jump_str=10
-end
-
-
-function p_update()
-	if (py>=120) py=120 is_grounded=true
-	if (not is_grounded) py+=gravity
-	
-	move_lr()
-
-	--jump logic--
-	if is_grounded and (btn(❎)) then
-		jump=jump_str
-		is_grounded=false
-	end
-	py-=jump
-	if (jump>0) jump-=1
-	--end jump logic
-	
-	
-	
-end
-
-
-function p_draw()
-	spr(1,px,py)
-	print(is_grounded)
-end
-
-function move_lr()--move left right--
-	if (btn(⬅️)) px-=p_speed
-	if (btn(➡️)) px+=p_speed
-end
-
---[[
-collisions function names start with 
-with c, then direction, ⬆️⬇️⬅️➡️
-]]--
-		
-function c_up()
-
-end
-
-function c_down()
-
-end
-
-function c_left()
-
-end
-
-function c_right()
-
-end
--->8
 --block manager--
 
 function bm_init()
@@ -131,7 +67,7 @@ function spawn_block(x,y)
 	return block
 end
 -->8
---player new--
+--player--
 
 function plr_init()
 	plr={}
@@ -154,7 +90,6 @@ function plr_update()
 	plr.is_gnd=collide()
 	apply_gravity()
 	move_plr()
-	
 end
 
 
@@ -196,16 +131,12 @@ end
 function collide()
 	local tl={x=plr.x,y=plr.y}--top left--
 	local br={x=plr.x+7,y=plr.y+7}--bottom right--
-	
 	local tlc=fget(mget(tl.x/8,tl.y/8),0)
 	local trc=fget(mget(br.x/8,tl.y/8),0)
 	local blc=fget(mget(tl.x/8,br.y/8),0)
 	local brc=fget(mget(br.x/8,br.y/8),0)
-	
 	return tlc or trc or blc or brc
 end
-
-
 
 	
 function solid_at(pixel_x,pixel_y)
@@ -238,11 +169,9 @@ function move_player()
 		end
 		plr.dx=0
 	end
-	
 	--vertical--
 	plr.is_gnd=false
 	plr.y+=dy
-	
 	if check_collision(plr.x,plr.y,plr.w,plr.h) then
 		if ply.dy>0 then
 			--landed--
