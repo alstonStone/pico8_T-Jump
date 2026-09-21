@@ -87,9 +87,11 @@ end
 
 
 function plr_update()
-	plr.is_gnd=collide()
-	apply_gravity()
-	move_plr()
+	-- plr.is_gnd=collide()
+	-- apply_gravity()
+	-- move_plr()
+	get_input()
+	move_player()
 end
 
 
@@ -124,7 +126,7 @@ end
 
 
 function apply_gravity()
-	if (not plr.is_gnd) plr.y+=gravity 
+	if (not plr.is_gnd) plr.dy+=gravity 
 end
 
 
@@ -138,6 +140,13 @@ function collide()
 	return tlc or trc or blc or brc
 end
 
+function get_input()
+	if (btn(⬅️)) plr.dx-=plr.speed
+	if (btn(➡️)) plr.dx+=plr.speed
+	if plr.is_gnd and (btn(❎)) then
+		plr.dy +=jump_str
+	end
+end
 	
 function solid_at(pixel_x,pixel_y)
 	local tile_x=flr(pixel_x/8)
@@ -171,9 +180,9 @@ function move_player()
 	end
 	--vertical--
 	plr.is_gnd=false
-	plr.y+=dy
+	plr.y+=plr.dy
 	if check_collision(plr.x,plr.y,plr.w,plr.h) then
-		if ply.dy>0 then
+		if plr.dy>0 then
 			--landed--
 			local tile_y=flr((plr.y-plr.h-1)/8)
 			plr.y=(tile_y*8)+plr.h
