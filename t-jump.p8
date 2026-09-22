@@ -28,6 +28,8 @@ end
 --block manager--
 
 function bm_init()
+	bw=8 --block width--
+	bh=8 --block height
 	blocks={}
 	add(blocks, spawn_block(flr(rnd(15))*8,0))
 end
@@ -51,10 +53,16 @@ function spawn_block(x,y)
 	local block={
 		x=x,
 		y=y,
+		w=8,
+		h=8,
 
 		--update position--
 		update = function(self)
 			self.y += gravity
+			if check_collision(self.x,self.y,bw,bh) then
+				local tile_y= flr((self.y-bh-1)/8)
+				self.y=(tile_y*8)+bh
+			end
 		end,
 		
 		--draw block--
@@ -158,6 +166,14 @@ function check_collision(x,y,w,h)
 		or    solid_at(x+w-1,y)
 		or    solid_at(x    ,y+h-1)
 		or    solid_at(x+w-1,y+h-1)
+end
+
+
+function check_collision_with_block(a, b)
+  return a.x < b.x + b.w and
+         a.x + a.w > b.x and
+         a.y < b.y + b.h and
+         a.y + a.h > b.y
 end
 	
 
