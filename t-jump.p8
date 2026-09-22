@@ -31,7 +31,9 @@ function bm_init()
 	bw=8 --block width--
 	bh=8 --block height
 	blocks={}
-	add(blocks, spawn_block(flr(rnd(15))*8,0))
+	for i=1,20 do
+		add(blocks, spawn_block(flr(rnd(15))*8,0))
+	end
 end
 
 
@@ -98,6 +100,11 @@ function plr_update()
 	get_input()
 	apply_movement_physics()
 	move_player()
+	for b in all(blocks) do
+		if check_collision_with_block(b,plr) then
+			set_location_pre_collision()
+		end
+	end
 end
 
 
@@ -175,6 +182,37 @@ function check_collision_with_block(a, b)
          a.y < b.y + b.h and
          a.y + a.h > b.y
 end
+
+function set_location_pre_collision()
+	--horizontal--
+	if plr.dx>0 then
+		--hit a wall on the right side--
+		local tile_x=flr((plr.x+plr.w-1)/8)
+		plr.x = (tile_x*8)-plr.w
+	elseif plr.dx<0 then
+		--hit a wall on the left--
+		local tile_x=flr(plr.x/8)
+		plr.x=tile_x*8+8
+	end
+
+	--vertical--
+	plr.is_gnd=false
+	if plr.dy>0 then
+		--landed--
+		local tile_y=flr((plr.y-plr.h-1)/8)
+		plr.y=(tile_y*8)+plr.h
+		plr.is_gnd=true
+		if plr.jumped==true then
+			sfx(1,1)
+			plr.jumped=false
+		end
+	elseif plr.dy<0 then
+		-- --hit head--
+		-- local tile_y=flr((plr.y+plr.h)/8)
+		-- plr.y=tile_y*8+8
+	end
+	
+end
 	
 
 function move_player()
@@ -248,3 +286,4 @@ __map__
 __sfx__
 00010000180501605013050110500d050090500505003050020500105001050070500f0501905020050250502c05032050380503b0503e0003e0003e0003e0003e0003d0003d0003c0003c0003b0003b0003b000
 000100003d61037610326102f6102b610296102761024610216101e6101a6101761013610106100c6100961005610036100061000600006000060000600006000060000600006000060000600006000060000600
+00060000001002815023150201501d150281502915026150221501d15019150181501a1501f150201501f1501c15017150151501a1501f15022150201501b1501815018150191501d1501e150001000010000100
