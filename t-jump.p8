@@ -4,15 +4,14 @@ __lua__
 --main--
 
 function _init()
-	gravity=5
-	--p_init()
+	debug=false
+	gravity=2
 	plr_init()
 	bm_init()
 end
 
 
 function _update()
---p_update()
 	plr_update()
 	bm_update()
 end
@@ -21,80 +20,15 @@ end
 function _draw()
 	cls()
 	map()
---	p_draw()
 	plr_draw()
 	bm_draw()
-end
--->8
---player--
-
-function p_init()
-	px=63
-	py=63
-	is_grounded=false
-	gravity=5
-	p_speed=3
-	jump=0
-	jump_str=10
-end
-
-
-function p_update()
-	if (py>=120) py=120 is_grounded=true
-	if (not is_grounded) py+=gravity
-	
-	move_lr()
-
-	--jump logic--
-	if is_grounded and (btn(❎)) then
-		jump=jump_str
-		is_grounded=false
-	end
-	py-=jump
-	if (jump>0) jump-=1
-	--end jump logic
-	
-	
-	
-end
-
-
-function p_draw()
-	spr(1,px,py)
-	print(is_grounded)
-end
-
-function move_lr()--move left right--
-	if (btn(⬅️)) px-=p_speed
-	if (btn(➡️)) px+=p_speed
-end
-
---[[
-collisions function names start with 
-with c, then direction, ⬆️⬇️⬅️➡️
-]]--
-		
-function c_up()
-
-end
-
-function c_down()
-
-end
-
-function c_left()
-
-end
-
-function c_right()
-
 end
 -->8
 --block manager--
 
 function bm_init()
 	blocks={}
-	add(blocks, spawn_block(rnd(120),0))
+	add(blocks, spawn_block(flr(rnd(15))*8,0))
 end
 
 
@@ -130,30 +64,37 @@ function spawn_block(x,y)
 	return block
 end
 -->8
---player new--
+--player--
 
 function plr_init()
 	plr={}
 	plr.x=63
 	plr.y=63
+	plr.dx=0
+	plr.dy=0
+	plr.w=8
+	plr.h=8
+	
 	plr.is_gnd=false
-	plr.speed=3
+	plr.speed=4
 	plr.jump=0
-	plr.jump_str=10
+	plr.jump_str=8
 	plr.is_gnd=false
 end
 
 
 function plr_update()
-	plr.is_gnd=is_grounded()
-	
-	move_plr()
-	--apply_gravity()
+	-- plr.is_gnd=collide()
+	-- apply_gravity()
+	-- move_plr()
+	get_input()
+	move_player()
 end
 
 
 function plr_draw()
 	spr(1,plr.x,plr.y)
+	print(plr.is_gnd)
 end
 
 
@@ -163,7 +104,7 @@ function move_plr()
 	if (collide()) plr.x=lx
 	ly=plr.y
 	move_ud()
-	if (collide()) plr.y=ly
+	if (plr.is_gnd) plr.y=ly
 end
 
 
@@ -182,36 +123,79 @@ end
 
 
 function apply_gravity()
-	if (not plr.is_gnd) plr.y+=gravity 
+	--if (not plr.is_gnd) plr.dy+=gravity
+	plr.dy+=gravity 
 end
 
 
 function collide()
 	local tl={x=plr.x,y=plr.y}--top left--
 	local br={x=plr.x+7,y=plr.y+7}--bottom right--
-	
 	local tlc=fget(mget(tl.x/8,tl.y/8),0)
 	local trc=fget(mget(br.x/8,tl.y/8),0)
 	local blc=fget(mget(tl.x/8,br.y/8),0)
 	local brc=fget(mget(br.x/8,br.y/8),0)
-	
 	return tlc or trc or blc or brc
 end
 
-
-function is_grounded()
-	local bl={x=plr.x,y=plr.y+7}--bottom left--
-	local br={x=plr.x+7,y=plr.y+7}--bottom right--
-	
-	local blc=fget(mget(bl.x,bl.y),0)--bl collision--
-	local brc=fget(mget(br.x,br.y),0)--br collision--
-	
-	return blc or brc
+function get_input()
+	plr.dx=0
+	if (btn(⬅️)) plr.dx-=plr.speed
+	if (btn(➡️)) plr.dx+=plr.speed
+	if plr.is_gnd and (btn(❎)) then
+		plr.dy= -plr.jump_str
+	end
 end
 	
+function solid_at(pixel_x,pixel_y)
+	local tile_x=flr(pixel_x/8)
+	local tile_y=flr(pixel_y/8)
+	return fget(mget(tile_x,tile_y),0)
+end
+
+
+function check_collision(x,y,w,h)
+	return solid_at(x    ,y)
+		or    solid_at(x+w-1,y)
+		or    solid_at(x    ,y+h-1)
+		or    solid_at(x+w-1,y+h-1)
+end
 	
-	
-	
+
+function move_player()
+	--horizontal--
+	plr.x+=plr.dx
+	if check_collision(plr.x,plr.y,plr.w,plr.h) then
+		if plr.dx>0 then
+			--hit a wall on the right side--
+			local tile_x=flr((plr.x+plr.w-1)/8)
+			plr.x = (tile_x*8)-plr.w
+		elseif plr.dx<0 then
+			--hit a wall on the left--
+			local tile_x=flr(plr.x/8)
+			plr.x=tile_x*8+8
+		end
+		plr.dx=0
+	end
+	--vertical--
+	apply_gravity()
+	plr.is_gnd=false
+	plr.y+=plr.dy
+	if check_collision(plr.x,plr.y,plr.w,plr.h) then
+		if plr.dy>0 then
+			--landed--
+			local tile_y=flr((plr.y-plr.h-1)/8)
+			plr.y=(tile_y*8)+plr.h
+			plr.is_gnd=true
+		elseif plr.dy<0 then
+			--hit head--
+			local tile_y=flr((plr.y+plr.h)/8)
+			plr.y=tile_y*8+8
+		end
+		plr.dy=0
+	end
+end
+
 	
 __gfx__
 00000000777777770000000066666666999999990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
