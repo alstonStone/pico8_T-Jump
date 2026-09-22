@@ -5,15 +5,13 @@ __lua__
 
 function _init()
 	debug=false
-	gravity=5
-	--p_init()
+	gravity=2
 	plr_init()
 	bm_init()
 end
 
 
 function _update()
---p_update()
 	plr_update()
 	bm_update()
 end
@@ -22,7 +20,6 @@ end
 function _draw()
 	cls()
 	map()
---	p_draw()
 	plr_draw()
 	bm_draw()
 end
@@ -79,9 +76,9 @@ function plr_init()
 	plr.h=8
 	
 	plr.is_gnd=false
-	plr.speed=3
+	plr.speed=4
 	plr.jump=0
-	plr.jump_str=10
+	plr.jump_str=8
 	plr.is_gnd=false
 end
 
@@ -126,7 +123,8 @@ end
 
 
 function apply_gravity()
-	if (not plr.is_gnd) plr.dy+=gravity 
+	--if (not plr.is_gnd) plr.dy+=gravity
+	plr.dy+=gravity 
 end
 
 
@@ -141,10 +139,11 @@ function collide()
 end
 
 function get_input()
+	plr.dx=0
 	if (btn(⬅️)) plr.dx-=plr.speed
 	if (btn(➡️)) plr.dx+=plr.speed
 	if plr.is_gnd and (btn(❎)) then
-		plr.dy +=jump_str
+		plr.dy= -plr.jump_str
 	end
 end
 	
@@ -179,6 +178,7 @@ function move_player()
 		plr.dx=0
 	end
 	--vertical--
+	apply_gravity()
 	plr.is_gnd=false
 	plr.y+=plr.dy
 	if check_collision(plr.x,plr.y,plr.w,plr.h) then
