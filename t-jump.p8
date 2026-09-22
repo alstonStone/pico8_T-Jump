@@ -81,7 +81,7 @@ function plr_init()
 	plr.slow=1
 	plr.max_speed=4
 	plr.jump=0
-	plr.jump_str=12
+	plr.jump_str=10
 	plr.is_gnd=false
 end
 
@@ -140,7 +140,7 @@ end
 function get_input()
 	if (btn(⬅️)) plr.dx-=plr.speed
 	if (btn(➡️)) plr.dx+=plr.speed
-	if plr.is_gnd and (btn(❎)) then
+	if plr.is_gnd and (btnp(❎)) then
 		plr.dy= -plr.jump_str
 	end
 end
