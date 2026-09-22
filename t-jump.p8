@@ -106,7 +106,6 @@ end
 
 
 function apply_movement_physics()
-	--plr.dx=0
 	if plr.dy>=plr.max_speed then
 		plr.dy=plr.max_speed
 	end
