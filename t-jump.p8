@@ -62,7 +62,7 @@ function spawn_block(x,y)
 		--update position--
 		update = function(self)
 			self.y += gravity
-			if check_collision_with_tile(self.x,self.y,bw,bh) then
+			if check_collision_with_tile(self.x,self.y,bw,bh) or check_block_collisions(self) then
 				local tile_y= flr((self.y-bh-1)/8)
 				self.y=(tile_y*8)+bh
 			end
@@ -143,7 +143,7 @@ end
 function move_player()
 	--horizontal--
 	plr.x+=plr.dx
-	if check_collision_with_tile(plr.x,plr.y,plr.w,plr.h) or check_block_collisions() then
+	if check_collision_with_tile(plr.x,plr.y,plr.w,plr.h) or check_block_collisions(plr) then
 		if plr.dx>0 then
 			--hit a wall on the right side--
 			local tile_x=flr((plr.x+plr.w-1)/8)
@@ -159,7 +159,7 @@ function move_player()
 	apply_gravity()
 	plr.is_gnd=false
 	plr.y+=plr.dy
-	if check_collision_with_tile(plr.x,plr.y,plr.w,plr.h) or check_block_collisions()then
+	if check_collision_with_tile(plr.x,plr.y,plr.w,plr.h) or check_block_collisions(plr)then
 		if plr.dy>0 then
 			--landed--
 			local tile_y=flr((plr.y-plr.h-1)/8)
@@ -199,10 +199,12 @@ function solid_at(pixel_x,pixel_y)
 end
 
 
-function check_block_collisions()
+function check_block_collisions(object)
 	for b in all(blocks) do
-		if check_collision_with_block(b,plr) then
-			return true
+		if b ~= object then
+			if check_collision_with_block(b,object) then
+				return true
+			end
 		end
 	end
 end
