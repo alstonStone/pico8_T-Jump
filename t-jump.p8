@@ -37,7 +37,7 @@ function bm_init()
 		--flr(rnd(15))
 	end
 	timers={}
-	add(timers,call_function_every_x_seconds(.01,spawn_block_random_X))
+	add(timers,call_function_every_x_seconds(.2,spawn_block_random_X))
 end
 
 
@@ -64,13 +64,17 @@ function spawn_block(x,y)
 		y=y,
 		w=8,
 		h=8,
+		landed=false,
 
 		--update position--
 		update = function(self)
-			self.y += gravity
-			if check_collision_with_tile(self.x,self.y,bw,bh) or check_block_collisions(self) then
-				local tile_y= flr((self.y-bh-1)/8)
-				self.y=(tile_y*8)+bh
+			if(not self.landed) then
+				self.y += gravity
+				if check_collision_with_tile(self.x,self.y,bw,bh) or check_block_collisions(self) then
+					local tile_y= flr((self.y-bh-1)/8)
+					self.y=(tile_y*8)+bh
+					self.landed=true
+				end
 			end
 		end,
 		
