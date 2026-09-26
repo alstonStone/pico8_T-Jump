@@ -37,7 +37,8 @@ function bm_init()
 		--flr(rnd(15))
 	end
 	timers={}
-	add(timers,call_function_every_x_seconds(.2,spawn_block_random_X))
+	add(timers,call_function_every_x_seconds(.15,spawn_block_random_X))
+	add(timers,call_function_every_x_seconds(10,remove_blocks_above_yvalue,96))
 end
 
 
@@ -89,6 +90,25 @@ end
 
 function spawn_block_random_X()
 	add(blocks,spawn_block(flr(rnd(16))*8,0))
+end
+
+
+function remove_blocks_above_yvalue(yval)
+	old_blocks=blocks
+	blocks={}
+	for b in all(old_blocks) do
+		if(b.y<yval) then
+			add(blocks,b)
+		end
+	end
+	enable_gravity_for_all_blocks()
+end
+
+
+function enable_gravity_for_all_blocks()
+	for b in all(blocks) do
+		b.landed = false
+	end
 end
 
 
@@ -289,6 +309,20 @@ function call_function_every_x_seconds(seconds,func_to_call)
 		self.time_left-=1
 		if self.time_left<=0 then
 			func_to_call()
+			--self.time_left=self.start_time
+			self.time_left=seconds*60
+		end
+	end
+	}
+end
+
+function call_function_every_x_seconds(seconds,func_to_call,value)
+	return{
+	time_left=seconds*60,
+	update=function(self)
+		self.time_left-=1
+		if self.time_left<=0 then
+			func_to_call(value)
 			--self.time_left=self.start_time
 			self.time_left=seconds*60
 		end
