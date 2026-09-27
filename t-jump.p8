@@ -8,7 +8,7 @@ function _init()
 	gravity=2
 	gravity_max=15
 	gm_init()
-	kl_init(3,5)
+	kl_init(5,1)
 	plr_init()
 	bm_init()
 end
@@ -375,6 +375,7 @@ function kl_draw()
 	if(kl.displayed) then
 		for xv=1,16 do
 			spr(9,xv*8,kl.y)
+			spr(9,63,63)
 		end
 	end
 end
