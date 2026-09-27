@@ -8,7 +8,7 @@ function _init()
 	gravity=2
 	gravity_max=15
 	gm_init()
-	kl_init(5,1)
+	kl_init(0,0)
 	plr_init()
 	bm_init()
 end
@@ -26,10 +26,10 @@ function _draw()
 	cls()
 	map()
 	print(plr.x)
-	
+	kl_draw()
 	plr_draw()
 	bm_draw()
-	kl_draw()
+	
 end
 -->8
 --block manager-----------------------------------------------------------------
@@ -38,9 +38,6 @@ function bm_init()
 	bw=8 --block width--
 	bh=8 --block height
 	blocks={}
-	for i=1,5 do
-		add(blocks, spawn_block(flr(rnd(16))*8,i*8))
-	end
 end
 
 
@@ -277,7 +274,8 @@ function gm_init()
 	difficulty=1
 	timers={}
 	add(timers,call_function_every_x_seconds(.15,spawn_block_random_X))
-	add(timers,call_function_every_x_seconds(10,remove_blocks_above_yvalue,96))
+	-- add(timers,call_function_every_x_seconds(10,remove_blocks_above_yvalue,96))
+	add(timers,kill_line_timer(4))
 end
 
 
@@ -286,13 +284,6 @@ function gm_update()
 		t:update()
 	end
 end
-
-
-function gm_draw()
-
-end
-
-
 
 function call_function_every_x_seconds(seconds,func_to_call)
 	return{
@@ -308,6 +299,7 @@ function call_function_every_x_seconds(seconds,func_to_call)
 	}
 end
 
+
 function call_function_every_x_seconds(seconds,func_to_call,value)
 	return{
 	time_left=seconds*60,
@@ -315,6 +307,36 @@ function call_function_every_x_seconds(seconds,func_to_call,value)
 		self.time_left-=1
 		if self.time_left<=0 then
 			func_to_call(value)
+			--self.time_left=self.start_time
+			self.time_left=seconds*60
+		end
+	end
+	}
+end
+
+
+function call_function_every_x_seconds(seconds,func_to_call,value1,value2)
+	return{
+	time_left=seconds*60,
+	update=function(self)
+		self.time_left-=1
+		if self.time_left<=0 then
+			func_to_call(value1,value2)
+			--self.time_left=self.start_time
+			self.time_left=seconds*60
+		end
+	end
+	}
+end
+
+
+function kill_line_timer(seconds)
+	return{
+	time_left=seconds*60,
+	update=function(self)
+		self.time_left-=1
+		if self.time_left<=0 then
+			kl_init(difficulty,3)
 			--self.time_left=self.start_time
 			self.time_left=seconds*60
 		end
@@ -333,7 +355,7 @@ function kl_init(row,time)
 	kl.active=true
 	kl.displayed=false
 	kl.display_count=3
-	kl.display_frames=30
+	kl.display_frames=5
 	kl.display_frames_count=0
 	kl.countdown_time=time*60
 	kl.countdown_interval=kl.countdown_time/3
@@ -341,25 +363,28 @@ end
 
 
 function kl_update()
-	--update countdown time-
-	kl.countdown_time-=1
-	if kl.countdown_time>=(kl.countdown_time*kl.display_count) then
-		kl_display()
-		kl.display_count-=1
-	end
-	
-	if kl.displayed then
-		if kl.display_frames_count<=kl.display_frames then
-			kl.display_frames_count+=1
-		else
-			kl.display_count=0
+	if kl.active then
+		kl.countdown_time-=1
+		if kl.countdown_time<=(kl.countdown_interval*kl.display_count) then
+			kl_display()
+			kl.display_count-=1
+		end
+		
+		if kl.displayed then
+			if kl.display_frames_count<=kl.display_frames then
+				kl.display_frames_count+=1
+			else
+				kl.displayed=false
+				kl.display_frames_count=0
+			end
+		end
+
+		if kl.display_count<0 then
+			remove_blocks_above_yvalue(kl.y)
+			difficulty+=1
+			kl.active=false
 			kl.displayed=false
 		end
-	end
-
-	if kl.display_count<0 then
-		remove_blocks_above_yvalue(kl.y)
-		kl.active=false
 	end
 end
 
@@ -372,10 +397,11 @@ function kl_display()
 end
 
 function kl_draw()
+	print(kl.countdown_time)
+	print((kl.countdown_interval*kl.display_count))
 	if(kl.displayed) then
 		for xv=1,16 do
-			spr(9,xv*8,kl.y)
-			spr(9,63,63)
+			spr(9,(xv-1)*8,kl.y)
 		end
 	end
 end
