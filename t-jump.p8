@@ -336,7 +336,7 @@ function kill_line_timer(seconds)
 	update=function(self)
 		self.time_left-=1
 		if self.time_left<=0 then
-			kl_init(difficulty,3)
+			kl_init(difficulty,1.75)
 			--self.time_left=self.start_time
 			self.time_left=seconds*60
 		end
@@ -354,7 +354,7 @@ function kl_init(row,time)
 	kl.row=row
 	kl.active=true
 	kl.displayed=false
-	kl.display_count=4
+	kl.display_count=3
 	kl.display_frames=5
 	kl.display_frames_count=0
 	kl.countdown_time=time*60
@@ -367,6 +367,7 @@ function kl_update()
 		kl.countdown_time-=1
 		if kl.countdown_time<=(kl.countdown_interval*kl.display_count) then
 			kl_display()
+			sfx(3,2)
 			kl.display_count-=1
 		end
 		
@@ -381,6 +382,7 @@ function kl_update()
 
 		if kl.display_count<0 then
 			remove_blocks_above_yvalue(kl.y)
+			sfx(2,2)
 			difficulty+=1
 			kl.active=false
 			kl.displayed=false
