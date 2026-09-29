@@ -336,7 +336,7 @@ function kill_line_timer(seconds)
 	update=function(self)
 		self.time_left-=1
 		if self.time_left<=0 then
-			kl_init(difficulty,1.75)
+			kl_init(difficulty,1.6)
 			--self.time_left=self.start_time
 			self.time_left=seconds*60
 		end
@@ -410,6 +410,10 @@ function kl_draw()
 	end
 end
 
+
+
+-->8
+--game over--
 
 
 __gfx__
