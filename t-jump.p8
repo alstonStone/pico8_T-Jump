@@ -127,6 +127,7 @@ function plr_init()
 	plr.jumped=false
 	plr.jump_str=10
 	plr.is_gnd=false
+	plr.is_alive=1
 end
 
 
@@ -134,13 +135,16 @@ function plr_update()
 	get_input()
 	apply_player_movement_physics()
 	move_player()
+	if plr.is_alive==1 then
+		plr.is_alive=is_player_alive()
+	end
 
 end
 
 
 function plr_draw()
 	spr(1,plr.x,plr.y)
-	print(plr.is_gnd)
+	print("alive ="..tostr(plr.is_alive))
 end
 
 function get_input()
@@ -206,13 +210,34 @@ function move_player()
 			end
 		elseif plr.dy<0 then
 			--hit head--
-			local tile_y=flr((plr.y+plr.h)/8)
-			plr.y=tile_y*8+8
+				local tile_y=flr((plr.y+plr.h)/8)
+				plr.y=tile_y*8+4
+			-- if plr.is_gnd then
+			-- 	local tile_y=flr((plr.y+plr.h)/8)
+			-- 	plr.y=tile_y*8+8
+			-- 	plr.is_alive=0
+			-- else
+
+			-- end
+
 		end
 		plr.dy=0
 	end
 end
 
+
+function is_player_alive()
+	local plr_tile_x=flr(plr.x/8)
+	local plr_tile_y=flr(plr.y/8)
+	for b in all(blocks) do
+		local b_tile_x=flr(b.x/8)
+		local b_tile_y=flr(b.y/8)
+		if plr_tile_x==b_tile_x and plr_tile_y==b_tile_y then
+			return 0		
+		end
+	end
+	return 1
+end
 
 
 -->8
@@ -271,7 +296,7 @@ end
 --gm is Game Manager--
 function gm_init()
 	score=0
-	difficulty=1
+	difficulty=0
 	timers={}
 	add(timers,call_function_every_x_seconds(.15,spawn_block_random_X))
 	-- add(timers,call_function_every_x_seconds(10,remove_blocks_above_yvalue,96))
@@ -414,6 +439,21 @@ end
 
 -->8
 --game over--
+
+function go_inti()
+
+end
+
+
+function go_update()
+
+end
+
+
+function go_draw()
+
+end
+
 
 
 __gfx__
