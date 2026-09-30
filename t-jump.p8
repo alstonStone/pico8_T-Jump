@@ -84,8 +84,12 @@ function spawn_block(x,y)
 end
 
 
+-- function spawn_block_random_X()
+-- 	add(blocks,spawn_block(flr(rnd(16))*8,0))
+-- end
+
 function spawn_block_random_X()
-	add(blocks,spawn_block(flr(rnd(16))*8,0))
+	add(blocks,spawn_block(bell_curve_16()*8,0))
 end
 
 
@@ -107,6 +111,18 @@ function enable_gravity_for_all_blocks()
 		b.landed = false
 	end
 end
+
+
+function bell_curve_16()
+    -- Summing three random integers from 0 to 5 outputs a bell curve from 0 to 15
+    local roll1 = flr(rnd(6))
+    local roll2 = flr(rnd(6))
+    local roll3 = flr(rnd(6))
+    
+    -- Adding 1 shifts the final range to 1-16
+    return roll1 + roll2 + roll3 
+end
+
 
 
 -->8
