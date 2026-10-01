@@ -25,7 +25,6 @@ end
 function _draw()
 	cls()
 	map()
-	print(plr.x)
 	kl_draw()
 	plr_draw()
 	bm_draw()
@@ -80,12 +79,19 @@ function spawn_block(x,y)
 			spr(3,self.x,self.y)
 		end
 	}
+	if plr.is_alive==1 then
+		score+=1*difficulty
+	end
 	return block
 end
 
 
+-- function spawn_block_random_X()
+-- 	add(blocks,spawn_block(flr(rnd(16))*8,0))
+-- end
+
 function spawn_block_random_X()
-	add(blocks,spawn_block(flr(rnd(16))*8,0))
+	add(blocks,spawn_block(flr(rnd(16))*8,-8))
 end
 
 
@@ -109,6 +115,14 @@ function enable_gravity_for_all_blocks()
 end
 
 
+function bell_curve_16()
+    local roll1 = flr(rnd(8))
+    local roll2 = flr(rnd(9))
+    return roll1 + roll2   -- range 1-16
+end
+
+
+
 -->8
 --player------------------------------------------------------------------------
 
@@ -127,27 +141,38 @@ function plr_init()
 	plr.jumped=false
 	plr.jump_str=10
 	plr.is_gnd=false
+	plr.is_alive=1
 end
 
 
 function plr_update()
-	get_input()
-	apply_player_movement_physics()
-	move_player()
-
+	if plr.is_alive==1 then
+		get_input()
+		apply_player_movement_physics()
+		move_player()
+		plr.is_alive=is_player_alive()
+		if plr.is_alive==0 then
+			explode(plr.x+4,plr.y+4,50)
+			sfx(4,1)
+		end
+	end
+	update_parts()
 end
 
 
 function plr_draw()
-	spr(1,plr.x,plr.y)
-	print(plr.is_gnd)
+	if plr.is_alive==1 then 
+		spr(1,plr.x,plr.y)
+	end
+	draw_parts()
+	print("score: "..tostr(score))
 end
 
 function get_input()
 	if (btn(⬅️)) plr.dx-=plr.speed
 	if (btn(➡️)) plr.dx+=plr.speed
 	if plr.is_gnd and (btnp(❎)) then
-		plr.dy= -plr.jump_str
+		plr.dy= -plr.jump_str-(difficulty/2)
 		sfx(0,1)
 		plr.jumped=true
 	end
@@ -207,13 +232,67 @@ function move_player()
 		elseif plr.dy<0 then
 			--hit head--
 			local tile_y=flr((plr.y+plr.h)/8)
-			plr.y=tile_y*8+8
+			plr.y=tile_y*8+4
 		end
 		plr.dy=0
 	end
 end
 
 
+function is_player_alive()
+	local plr_tile_x=flr(plr.x/8)
+	local plr_tile_y=flr(plr.y/8)
+	for b in all(blocks) do
+		local b_tile_x=flr(b.x/8)
+		local b_tile_y=flr(b.y/8)
+		if plr_tile_x==b_tile_x and plr_tile_y==b_tile_y then
+			return 0		
+		end
+	end
+	return 1
+end
+
+parts = {}
+
+function explode(x, y, n)
+  for i=1,n do
+    local a = rnd(1)             -- random direction (PICO-8 angles are 0-1)
+    local spd = 0.5 + rnd(2.5)   -- random speed
+    add(parts, {
+      x=x, y=y,
+      dx=cos(a)*spd,
+      dy=sin(a)*spd,
+      r=1+rnd(2),                -- starting radius
+      age=0,
+      life=15+rnd(15)            -- frames until it dies
+    })
+  end
+end
+
+function update_parts()
+  for p in all(parts) do
+    p.x += p.dx
+    p.y += p.dy
+    p.dx *= 0.92                 -- friction
+    p.dy *= 0.92
+    p.r -= 0.05                  -- shrink
+    p.age += 1
+    if p.age > p.life or p.r <= 0 then
+      del(parts, p)
+    end
+  end
+end
+
+function draw_parts()
+  for p in all(parts) do
+    local t = p.age / p.life
+    local c = 7                  -- white
+    if t > 0.3 then c = 6 end    -- light gray
+    if t > 0.6 then c = 13 end   -- indigo-gray
+    if t > 0.8 then c = 5 end    -- dark gray
+    circfill(p.x, p.y, p.r, c)
+  end
+end
 
 -->8
 --physics-----------------------------------------------------------------------
@@ -271,9 +350,9 @@ end
 --gm is Game Manager--
 function gm_init()
 	score=0
-	difficulty=1
+	difficulty=0
 	timers={}
-	add(timers,call_function_every_x_seconds(.15,spawn_block_random_X))
+	add(timers,call_function_every_x_seconds(.5,spawn_block_random_X))
 	-- add(timers,call_function_every_x_seconds(10,remove_blocks_above_yvalue,96))
 	add(timers,kill_line_timer(4))
 end
@@ -283,6 +362,17 @@ function gm_update()
 	for t in all (timers) do
 		t:update()
 	end
+end
+function call_function_after_x_seconds(seconds,func_to_call)
+	return{
+	time_left=seconds*60,
+	update=function(self)
+		self.time_left-=1
+		if self.time_left<=0 then
+			func_to_call()
+		end
+	end
+	}
 end
 
 function call_function_every_x_seconds(seconds,func_to_call)
@@ -336,7 +426,7 @@ function kill_line_timer(seconds)
 	update=function(self)
 		self.time_left-=1
 		if self.time_left<=0 then
-			kl_init(difficulty,1.75)
+			kl_init(difficulty,1.6)
 			--self.time_left=self.start_time
 			self.time_left=seconds*60
 		end
@@ -382,7 +472,13 @@ function kl_update()
 
 		if kl.display_count<0 then
 			remove_blocks_above_yvalue(kl.y)
+			if plr.y>=kl.y then
+				plr.is_alive=0
+				explode(plr.x+4,plr.y+4,50)
+				sfx(4,1)
+			end
 			sfx(2,2)
+			add(timers,call_function_every_x_seconds(rnd(2)+.5,spawn_block_random_X))
 			difficulty+=1
 			kl.active=false
 			kl.displayed=false
@@ -399,8 +495,6 @@ function kl_display()
 end
 
 function kl_draw()
-	print(kl.countdown_time)
-	print((kl.countdown_interval*kl.display_count))
 	if(kl.displayed) then
 		for yv=1,kl.row do
 			for xv=1,16 do
@@ -408,6 +502,25 @@ function kl_draw()
 			end
 		end
 	end
+end
+
+
+
+-->8
+--game over--
+
+function go_inti()
+
+end
+
+
+function go_update()
+
+end
+
+
+function go_draw()
+
 end
 
 
@@ -454,3 +567,4 @@ __sfx__
 000100003d61037610326102f6102b610296102761024610216101e6101a6101761013610106100c6100961005610036100061000600006000060000600006000060000600006000060000600006000060000600
 00010000036500365004650056500665007650086500a6500c6500f65014650186501e650256502f650366503a6503c6503a6503765031650296501e65016650116500e6500a6500765004650026500165001650
 00200000084501745018400014000140001400014000140001400014000040000400004000a4000a4002340023400234002340023400224002240022400224002240022400234002340023400234000040000400
+000100003937039370393703a37039370393703937039370393703937039370393703837038370373703737037370363703637036370363703637033370303702d37029370223701e3701b37015370113700d370
