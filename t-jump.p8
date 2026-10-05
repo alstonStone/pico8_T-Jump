@@ -4,9 +4,7 @@ __lua__
 --main--------------------------------------------------------------------------
 
 function _init()
-	debug=false
-	gravity=2
-	gravity_max=15
+	state="title"
 	gm_init()
 	kl_init(0,0)
 	plr_init()
@@ -15,20 +13,24 @@ end
 
 
 function _update()
-	gm_update()
-	kl_update()
-	plr_update()
-	bm_update()
+	if state=="title" then
+		ts_update()
+	elseif state=="game" then
+		gm_update()
+	elseif state=="game over" then
+		go_update()
+	end
 end
 
 
 function _draw()
-	cls()
-	map()
-	kl_draw()
-	plr_draw()
-	bm_draw()
-	
+		if state=="title" then
+		ts_draw()
+	elseif state=="game" then
+		gm_draw()
+	elseif state=="game over" then
+		go_draw()
+	end
 end
 -->8
 --block manager-----------------------------------------------------------------
@@ -48,8 +50,10 @@ end
 
 
 function bm_draw()
-	for b in all(blocks) do
-		b:draw()
+	if plr.is_alive==1 then
+		for b in all(blocks) do
+			b:draw()
+		end
 	end
 end
 
@@ -154,6 +158,7 @@ function plr_update()
 		if plr.is_alive==0 then
 			explode(plr.x+4,plr.y+4,50)
 			sfx(4,1)
+			death_transition()
 		end
 	end
 	update_parts()
@@ -294,6 +299,15 @@ function draw_parts()
   end
 end
 
+function death_transition()
+	add(timers,call_function_after_x_seconds(1,switch_game_over))
+end
+
+function switch_game_over()
+	state="game over"
+	go_init()
+end
+
 -->8
 --physics-----------------------------------------------------------------------
 	
@@ -349,6 +363,8 @@ end
 
 --gm is Game Manager--
 function gm_init()
+	gravity=2
+	gravity_max=15
 	score=0
 	difficulty=0
 	timers={}
@@ -362,7 +378,20 @@ function gm_update()
 	for t in all (timers) do
 		t:update()
 	end
+	kl_update()
+	plr_update()
+	bm_update()
 end
+
+function gm_draw()
+	cls()
+	map()
+	kl_draw()
+	plr_draw()
+	bm_draw()
+end
+
+
 function call_function_after_x_seconds(seconds,func_to_call)
 	return{
 	time_left=seconds*60,
@@ -374,6 +403,9 @@ function call_function_after_x_seconds(seconds,func_to_call)
 	end
 	}
 end
+
+
+
 
 function call_function_every_x_seconds(seconds,func_to_call)
 	return{
@@ -473,9 +505,12 @@ function kl_update()
 		if kl.display_count<0 then
 			remove_blocks_above_yvalue(kl.y)
 			if plr.y>=kl.y then
-				plr.is_alive=0
-				explode(plr.x+4,plr.y+4,50)
-				sfx(4,1)
+				if plr.is_alive==1 then
+					plr.is_alive=0
+					explode(plr.x+4,plr.y+4,50)
+					sfx(4,1)
+					death_transition()
+				end
 			end
 			sfx(2,2)
 			add(timers,call_function_every_x_seconds(rnd(2)+.5,spawn_block_random_X))
@@ -509,17 +544,47 @@ end
 -->8
 --game over--
 
-function go_inti()
+function go_init()
 
 end
 
 
 function go_update()
+	if btn(❎) then
+		run()
+	end
 
 end
 
 
 function go_draw()
+	cls()
+	print("score: "..score,50,50,7)
+	print("press ❎ to play again",30,100,7)
+
+end
+
+
+-->8
+--title screen--
+
+function ts_init()
+
+end
+
+
+function ts_update()
+	if btn(❎) then
+		state="game"
+		gm_init()
+	end
+end
+
+
+function ts_draw()
+	cls()
+	print("t-jump",50,50,7)
+	print("press ❎ to start",30,60,7)
 
 end
 
