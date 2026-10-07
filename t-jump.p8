@@ -458,7 +458,7 @@ function kill_line_timer(seconds)
 	update=function(self)
 		self.time_left-=1
 		if self.time_left<=0 then
-			kl_init(difficulty,1.6)
+			kl_init(difficulty,1.6-(difficulty*.05))
 			--self.time_left=self.start_time
 			self.time_left=seconds*60
 		end
